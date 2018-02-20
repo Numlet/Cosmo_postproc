@@ -150,14 +150,15 @@ def Filter_dict(address_dict,years=[0,99999],months=[0,999],days=[0,999],hours=[
 
 #%%
     
-def Quick_plot(dataset,variable,levels=0,title=0):
+def Quick_plot(dataset,variable,levels=0,title=0,cmap=plt.cm.viridis,show=0,saving_name=0,new_fig=1,fig=0):
     latitudes = dataset.variables['lat'][:]
     longitudes = dataset.variables['lon'][:]
-    fig=plt.figure(figsize=(10, 8))
+    if new_fig:
+        fig=plt.figure(figsize=(10, 8))
     lon_0 = longitudes.mean()
     lat_0 = latitudes.mean()
 
-    ax=fig.add_axes([0.1,0.1,0.8,0.8])
+#    ax=fig.add_axes([0.1,0.1,0.8,0.8])
     m = Basemap(llcrnrlon=longitudes.min(),llcrnrlat=latitudes.min(),urcrnrlon=longitudes.max(),urcrnrlat=latitudes.max(),\
             resolution='l',projection='merc',\
             lat_0=lat_0,lon_0=lon_0)
@@ -171,13 +172,17 @@ def Quick_plot(dataset,variable,levels=0,title=0):
     if isinstance(levels,int):
         levels=np.linspace(dataset.variables[variable][0,].min(),dataset.variables[variable][0,].max(),10).tolist()
 
-    cs=m.contourf(longitudes,latitudes,dataset.variables[variable][0,],levels,latlon=True,norm= colors.BoundaryNorm(levels, 256))
+    cs=m.contourf(longitudes,latitudes,dataset.variables[variable][0,],levels,latlon=True,norm= colors.BoundaryNorm(levels, 256),cmap=cmap)
     cb = m.colorbar(cs,format='%.2e',ticks=levels)
     cb.set_label(dataset.variables[variable].units)
     if not isinstance(title, str):
         title=dataset.title+' - '+dataset.experiment_id
-    ax.set_title(title)
-    plt.show()
+    plt.title(title)
+    if show:
+        plt.show()
+    if isinstance(saving_name, str):
+        plt.savefig(saving_name)
+
 #dataset=Dataset(address_dict['2000122110'])
 #variable='ASWD_S'
 #
