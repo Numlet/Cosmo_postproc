@@ -23,12 +23,12 @@ months_str_upper_case=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oc
 month_names=['January','February','March','April','May','June','July','August','September','October','November','December']
 days_end_month=np.array([0,31,59,90,120,151,181,212,243,273,304,334,365])
 days_end_month_leap=np.array([0,32,60,91,121,152,182,213,244,274,305,335,366])
-
+hours_in_day=['00','01','02','03','04','05','06','07','08','09','10','11','12','13','14','15','16','17','18','19','20','21','22','23']
 days_in_month=np.array([31,28,31,30,31,30,31,31,30,31,30,31])
 days_in_month_leap=np.array([31,29,31,30,31,30,31,31,30,31,30,31])
 
 
-def Print_date(year,month,day,hour):
+def Print_date(year,month,day,hour='No Hour'):
     date=str(year)
     if month>=10:
         date=date+str(month)
@@ -38,12 +38,49 @@ def Print_date(year,month,day,hour):
         date=date+str(day)
     else:
         date=date+'0'+str(day)
-    if hour>=10:
-        date=date+str(hour)
-    else:
-        date=date+'0'+str(hour)
+    if not hour=='No Hour':
+        if hour>=10:
+            date=date+str(hour)
+        else:
+            date=date+'0'+str(hour)
 #    print (date)
     return date
+
+
+
+def Daily_time_list(start_date='2000060100', end_date='2000060223'):
+    if len(end_date)>8:end_date=end_date[:8]
+    if len(start_date)>8:start_date=start_date[:8]
+
+    s_year=int(start_date[:4])
+    s_month=int(start_date[4:6])
+    s_day=int(start_date[6:8])
+    e_year=int(end_date[:4])
+    e_month=int(end_date[4:6])
+    e_day=int(end_date[6:8])
+    list_of_dates=[]
+    current_date=start_date
+    list_of_dates.append(current_date)
+    while current_date!=end_date:
+        c_year=int(current_date[:4])
+        c_month=int(current_date[4:6])
+        c_day=int(current_date[6:8])
+        leap_year=np.logical_not(c_year%4)
+        if not leap_year:
+            max_days_in_month=days_in_month
+        else:
+            max_days_in_month=days_in_month_leap
+            
+        c_day=c_day+1
+        if c_day>max_days_in_month[c_month-1]:
+            c_day=1
+            c_month=c_month+1
+            if c_month>12:
+                c_month=1
+                c_year=c_year+1
+        current_date=Print_date(c_year,c_month,c_day)
+        list_of_dates.append(current_date)
+    return list_of_dates
 
 
 
@@ -61,6 +98,7 @@ def Hourly_time_list(start_date='2000060104', end_date='2000060204'):
     current_date=start_date
     list_of_dates.append(current_date)
     while current_date!=end_date:
+#        print (current_date)
         c_year=int(current_date[:4])
         c_month=int(current_date[4:6])
         c_day=int(current_date[6:8])
@@ -173,7 +211,7 @@ def Quick_plot(dataset,variable,levels=0,title=0,cmap=plt.cm.viridis,show=0,savi
         levels=np.linspace(dataset.variables[variable][0,].min(),dataset.variables[variable][0,].max(),10).tolist()
 
     cs=m.contourf(longitudes,latitudes,dataset.variables[variable][0,],levels,latlon=True,norm= colors.BoundaryNorm(levels, 256),cmap=cmap)
-    cb = m.colorbar(cs,format='%.2e',ticks=levels)
+    cb = m.colorbar(cs,format='%.1f',ticks=levels)
     cb.set_label(dataset.variables[variable].units)
     if not isinstance(title, str):
         title=dataset.title+' - '+dataset.experiment_id
