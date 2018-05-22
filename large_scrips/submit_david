@@ -1,0 +1,16 @@
+#!/bin/tcsh
+#SBATCH --job-name=regrid_david
+#SBATCH --output=regrid_david.out
+#SBATCH --nodes=1
+#SBATCH --partition=normal
+#SBATCH --time=24:00:00
+#SBATCH --account=pr04
+#SBATCH --constraint=gpu
+gpu
+module load CDO
+
+ipython regrid_run_david.py
+
+
+
+

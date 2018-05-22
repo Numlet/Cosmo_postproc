@@ -1,0 +1,27 @@
+gpu: Command not found.
+ModuleCmd_Load.c(244):ERROR:105: Unable to locate a modulefile for 'CDO'
+[TerminalIPythonApp] ERROR | Failed to create history session in /users/jvergara/.ipython/profile_default/history.sqlite. History will not be saved.
+Traceback (most recent call last):
+  File "/users/jvergara/miniconda3/lib/python3.6/site-packages/IPython/core/history.py", line 543, in __init__
+    self.new_session()
+  File "<decorator-gen-22>", line 2, in new_session
+  File "/users/jvergara/miniconda3/lib/python3.6/site-packages/IPython/core/history.py", line 58, in needs_sqlite
+    return f(self, *a, **kw)
+  File "/users/jvergara/miniconda3/lib/python3.6/site-packages/IPython/core/history.py", line 569, in new_session
+    NULL, "") """, (datetime.datetime.now(),))
+sqlite3.OperationalError: unable to open database file
+]0;IPython: python_code/large_scrips 
+Batch Job Summary Report for Job "regrid_david" (7456713) on daint
+-----------------------------------------------------------------------------------------------------
+             Submit            Eligible               Start                 End    Elapsed  Timelimit 
+------------------- ------------------- ------------------- ------------------- ---------- ---------- 
+2018-05-11T16:53:53 2018-05-11T16:53:53 2018-05-11T16:54:14 2018-05-11T16:54:33   00:00:19 1-00:00:00 
+-----------------------------------------------------------------------------------------------------
+Username    Account     Partition   NNodes   Energy
+----------  ----------  ----------  ------  --------------
+jvergara    pr04        normal           1    1.25K joules
+----------------------------------------------------------
+Scratch File System        Files       Quota
+--------------------  ----------  ----------
+/scratch/snx3000               2     1000000
+ 

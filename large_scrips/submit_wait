@@ -1,0 +1,14 @@
+#!/bin/tcsh
+#SBATCH --job-name=wait
+#SBATCH --output=wait.out
+#SBATCH --nodes=1
+#SBATCH --partition=normal
+#SBATCH --time=00:01:00
+#SBATCH --account=pr04
+#SBATCH --constraint=gpu
+
+ipython many_wait.py
+
+
+
+

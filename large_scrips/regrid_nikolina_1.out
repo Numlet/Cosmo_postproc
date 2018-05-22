@@ -1,0 +1,25 @@
+[TerminalIPythonApp] ERROR | Failed to create history session in /users/jvergara/.ipython/profile_default/history.sqlite. History will not be saved.
+Traceback (most recent call last):
+  File "/users/jvergara/miniconda3/lib/python3.6/site-packages/IPython/core/history.py", line 543, in __init__
+    self.new_session()
+  File "<decorator-gen-22>", line 2, in new_session
+  File "/users/jvergara/miniconda3/lib/python3.6/site-packages/IPython/core/history.py", line 58, in needs_sqlite
+    return f(self, *a, **kw)
+  File "/users/jvergara/miniconda3/lib/python3.6/site-packages/IPython/core/history.py", line 569, in new_session
+    NULL, "") """, (datetime.datetime.now(),))
+sqlite3.OperationalError: unable to open database file
+]0;IPython: python_code/large_scrips 
+Batch Job Summary Report for Job "regrid_nikolina_1" (7456681) on daint
+-----------------------------------------------------------------------------------------------------
+             Submit            Eligible               Start                 End    Elapsed  Timelimit 
+------------------- ------------------- ------------------- ------------------- ---------- ---------- 
+2018-05-11T16:52:46 2018-05-11T16:52:46 2018-05-11T16:52:56 2018-05-11T16:53:12   00:00:16 1-00:00:00 
+-----------------------------------------------------------------------------------------------------
+Username    Account     Partition   NNodes   Energy
+----------  ----------  ----------  ------  --------------
+jvergara    pr04        normal           1    1.05K joules
+----------------------------------------------------------
+Scratch File System        Files       Quota
+--------------------  ----------  ----------
+/scratch/snx3000               2     1000000
+ 

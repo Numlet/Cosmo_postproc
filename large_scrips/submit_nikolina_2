@@ -1,0 +1,14 @@
+#!/bin/tcsh
+#SBATCH --job-name=regrid_nikolina_2
+#SBATCH --output=regrid_nikolina_2.out
+#SBATCH --nodes=1
+#SBATCH --partition=normal
+#SBATCH --time=24:00:00
+#SBATCH --account=pr04
+#SBATCH --constraint=gpu
+
+ipython regrid_run_nikolina_2.py
+
+
+
+
