@@ -32,7 +32,7 @@ data_saving_folder_c='/store/c2sm/pr04/jvergara/DRY_DAYS_C/'
 
 a=glob.glob(data_saving_folder+'*')
 a_c=glob.glob(data_saving_folder_c+'*')
-
+plots_folder='/users/jvergara/DRY_DAYS_F_REGRIDED/'
 dry_dict={}
 for name in a:
     dry_dict[name[-8:-4]]=np.load(name)
@@ -89,7 +89,7 @@ jle.Quick_plot(jle.Mask_coarse_map(diff),'Diff Present 2.2km-12km',metadata_data
 plt.subplot(224)
 percentage=(present_dry_days.mean(axis=0)-present_dry_days_c.mean(axis=0))/present_dry_days_c.mean(axis=0)*100
 jle.Quick_plot(jle.Mask_coarse_map(percentage),'Percentage',metadata_dataset=sample_dataset,cmap=plt.cm.RdBu_r,levels=np.linspace(-110,110,15).tolist(),new_fig=False,title='Percentage change 2.2 - 12    Mean:%1.3f'%percentage.mean())
-plt.savefig(saving_folder+'Dry_days_present_2_12.png')
+plt.savefig(plots_folder+'Dry_days_present_2_12.png')
 
 #%%
 levels=np.linspace(0,150,15).tolist()
@@ -108,7 +108,7 @@ jle.Quick_plot(jle.Mask_coarse_map(diff),'Diff future 2.2km-12km',metadata_datas
 plt.subplot(224)
 percentage=(future_dry_days.mean(axis=0)-future_dry_days_c.mean(axis=0))/future_dry_days_c.mean(axis=0)*100
 jle.Quick_plot(jle.Mask_coarse_map(percentage),'Percentage',metadata_dataset=sample_dataset,cmap=plt.cm.RdBu_r,levels=np.linspace(-110,110,15).tolist(),new_fig=False,title='Percentage change 2.2 - 12    Mean:%1.3f'%percentage.mean())
-plt.savefig(saving_folder+'Dry_days_future_2_12.png')
+plt.savefig(plots_folder+'Dry_days_future_2_12.png')
 #%%
 
 # =============================================================================
@@ -130,7 +130,7 @@ jle.Quick_plot(jle.Mask_coarse_map(diff),'Diff Present 2.2km-12km',metadata_data
 plt.subplot(224)
 percentage=(present_dry_days.std(axis=0)-present_dry_days_c.std(axis=0))/present_dry_days_c.std(axis=0)*100
 jle.Quick_plot(jle.Mask_coarse_map(percentage),'Percentage',metadata_dataset=sample_dataset,cmap=plt.cm.RdBu_r,levels=np.linspace(-110,110,15).tolist(),new_fig=False,title='Percentage change 2.2 - 12    std:%1.3f'%percentage.std())
-plt.savefig(saving_folder+'Dry_days_standard_deviation_present_2_12.png')
+plt.savefig(plots_folder+'Dry_days_standard_deviation_present_2_12.png')
 
 #%%
 levels=np.linspace(0,50,15).tolist()
@@ -149,7 +149,7 @@ jle.Quick_plot(jle.Mask_coarse_map(diff),'Diff future 2.2km-12km',metadata_datas
 plt.subplot(224)
 percentage=(future_dry_days.std(axis=0)-future_dry_days_c.std(axis=0))/future_dry_days_c.std(axis=0)*100
 jle.Quick_plot(jle.Mask_coarse_map(percentage),'Percentage',metadata_dataset=sample_dataset,cmap=plt.cm.RdBu_r,levels=np.linspace(-110,110,15).tolist(),new_fig=False,title='Percentage change 2.2 - 12    std:%1.3f'%percentage.std())
-plt.savefig(saving_folder+'Dry_days_standard_deviation_future_2_12.png')
+plt.savefig(plots_folder+'Dry_days_standard_deviation_future_2_12.png')
 
 
 

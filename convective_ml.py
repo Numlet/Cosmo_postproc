@@ -135,6 +135,8 @@ for month in jle.months_number_str:
     if len(month_address_dict)==0:
         continue
     rain_in_month=np.zeros((len(keys),lats.shape[0],lats.shape[1]))
+    temp_in_month=np.zeros((len(keys),lats.shape[0],lats.shape[1]))
+    rh_in_month=np.zeros((len(keys),lats.shape[0],lats.shape[1]))
     conv_rain_in_month=np.zeros((len(keys),lats.shape[0],lats.shape[1]))
     grsc_rain_in_month=np.zeros((len(keys),lats.shape[0],lats.shape[1]))
     div_in_month=np.zeros((len(keys),lats.shape[0],lats.shape[1]))
@@ -146,6 +148,8 @@ for month in jle.months_number_str:
 #        conv_rain_in_month[i,:,:]=dataset.variables['RAIN_CON'][0,]+dataset.variables['SNOW_CON'][0,]
 #        grsc_rain_in_month[i,:,:]=dataset.variables['RAIN_GSP'][0,]+dataset.variables['SNOW_GSP'][0,]
 
+        temp_in_month[i,:,:]=dataset.variables['T_2M'][0,]
+        rh_in_month[i,:,:]=dataset.variables['RELHUM_2M'][0,]
         conv_rain_in_month[i,:,:]=dataset.variables['RAIN_CON'][0,]+dataset.variables['SNOW_CON'][0,]
         grsc_rain_in_month[i,:,:]=dataset.variables['RAIN_GSP'][0,]+dataset.variables['SNOW_GSP'][0,]
         rain_in_month[i,:,:]=conv_rain_in_month[i,:,:]+grsc_rain_in_month[i,:,:]
@@ -162,6 +166,8 @@ for month in jle.months_number_str:
     grsc_rain_in_month[rain_in_month<rain_threshold]=0#Hace falta esto? Tal vez sea mejor no applicar ningun threshold
 #    rain_or_not=np.zeros_like(rain_in_month[0,])
     duration_events=np.zeros_like(rain_in_month)
+    temp_events=np.zeros_like(rain_in_month)
+    rh_events=np.zeros_like(rain_in_month)
     mean_intensity_events=np.zeros_like(rain_in_month)
     mean_conv_intensity_events=np.zeros_like(rain_in_month)
     mean_grsc_intensity_events=np.zeros_like(rain_in_month)
@@ -173,6 +179,8 @@ for month in jle.months_number_str:
     for ilon in range(len(rain_in_month[0,:,0])):
         print (ilon)
         for ilat in range(len(rain_in_month[0,0,:])):
+            rh_in_gridbox=rh_in_month[:,ilon,ilat]
+            temp_in_gridbox=temp_in_month[:,ilon,ilat]
             rain_in_gridbox=rain_in_month[:,ilon,ilat]
             conv_rain_in_gridbox=conv_rain_in_month[:,ilon,ilat]
             grsc_rain_in_gridbox=grsc_rain_in_month[:,ilon,ilat]
@@ -188,6 +196,8 @@ for month in jle.months_number_str:
                     spell_conv_intensity=[]
                     spell_grsc_intensity=[]
                     spell_intensity=[]
+                    spell_temp=[]
+                    spell_rh=[]
                     spell_conv_filter=[]
                     spell_div=[]
                     spell_vor=[]
@@ -207,8 +217,12 @@ for month in jle.months_number_str:
                             else:
                                 intensity_f=[rain_in_gridbox[ihour+1]]
                             intensity=rain_in_gridbox[ihour]
+#                            temp=temp_in_gridbox[ihour]
+#                            rh=rh_in_gridbox[ihour]
                             
                             filter_value=-(1./4)*(intensity_b-2*intensity+intensity_f)
+                            spell_temp.append(temp_in_gridbox[ihour])
+                            spell_rh.append(rh_in_gridbox[ihour])
                             spell_intensity.append(rain_in_gridbox[ihour])
                             spell_div.append(div_in_gridbox[ihour])
                             spell_vor.append(vor_in_gridbox[ihour])
@@ -221,6 +235,8 @@ for month in jle.months_number_str:
                     std=np.std(spell_intensity)
                     maximum=np.max(spell_intensity)
                     mean=np.mean(spell_intensity)
+                    mean_temp=np.mean(spell_temp)
+                    mean_rh=np.mean(spell_rh)
                     mean_div=np.mean(spell_div)
                     mean_vor=np.mean(spell_vor)
                     mean_conv=np.mean(spell_conv_intensity)
@@ -228,6 +244,8 @@ for month in jle.months_number_str:
                     mean_conv_filter=np.sum(np.array(spell_conv_filter)**2)/len(spell_conv_filter)
                     
                     
+                    temp_events[starting_hour,ilon,ilat]=mean_temp
+                    rh_events[starting_hour,ilon,ilat]=mean_rh
                     duration_events[starting_hour,ilon,ilat]=duration
                     mean_conv_intensity_events[starting_hour,ilon,ilat]=mean_conv
                     mean_grsc_intensity_events[starting_hour,ilon,ilat]=mean_grsc
@@ -237,6 +255,8 @@ for month in jle.months_number_str:
                     std_events[starting_hour,ilon,ilat]=std
                     max_events[starting_hour,ilon,ilat]=maximum
                     conv_filter_events[starting_hour,ilon,ilat]=mean_conv_filter
+    np.save(data_folder+year+month+'rh_with_threshold',rh_events)
+    np.save(data_folder+year+month+'temp_with_threshold',temp_events)
     np.save(data_folder+year+month+'duration_with_threshold',duration_events)
     np.save(data_folder+year+month+'mean_intensity_events_with_threshold',mean_intensity_events)
     np.save(data_folder+year+month+'div_events_with_threshold',div_events)
@@ -253,7 +273,7 @@ for month in jle.months_number_str:
 
 mean_intensity_files=glob.glob(data_folder+'*mean_intensity*')
 
-headers=['duration','mean_intensity','max_intensity','std','convective_filter','div','vor','convective_or_not','convective_fraction','month','lon','lat']
+headers=['duration','mean_intensity','max_intensity','std','convective_filter','div','vor','temp','rh','convective_or_not','convective_fraction','month','lon','lat']
 
 threshold='with_threshold'
 data=np.empty([100000000,len(headers)])
@@ -261,6 +281,8 @@ idata=0
 for month in ['07']:
     print (month)
     duration=np.load(data_folder+'2006'+month+'duration_'+threshold+'.npy')
+    temp=np.load(data_folder+'2006'+month+'temp_'+threshold+'.npy')
+    rh=np.load(data_folder+'2006'+month+'rh_'+threshold+'.npy')
     mean_intensity=np.load(data_folder+'2006'+month+'mean_intensity_events_'+threshold+'.npy')
     mean_grsc_intensity=np.load(data_folder+'2006'+month+'mean_grsc_intensity_events_'+threshold+'.npy')
     mean_conv_intensity=np.load(data_folder+'2006'+month+'mean_conv_intensity_events_'+threshold+'.npy')
@@ -279,6 +301,8 @@ for month in ['07']:
         print (ilon)
         for ilat in range(lats.shape[1]):
             duration_column=duration[:,ilat,ilon]
+            rh_column=rh[:,ilat,ilon]
+            temp_column=temp[:,ilat,ilon]
             mean_div_column=mean_div[:,ilat,ilon]
             mean_vor_column=mean_vor[:,ilat,ilon]
             mean_intensity_column=mean_intensity[:,ilat,ilon]
@@ -290,6 +314,8 @@ for month in ['07']:
             
             events=[duration_column!=0]
             duration_column=duration_column[events]
+            rh_column=rh_column[events]
+            temp_column=temp_column[events]
             mean_intensity_column=mean_intensity_column[events]
             mean_div_column=mean_div_column[events]
             mean_vor_column=mean_vor_column[events]
@@ -301,7 +327,7 @@ for month in ['07']:
             if np.sum(events)>0:
                 for i in range(len(duration_column)):
                     
-                    array=[duration_column[i],mean_intensity_column[i],max_events_column[i],std_column[i],conv_filter_column[i],mean_div_column[i],mean_vor_column[i],convective_or_not_column[i],convective_fraction_column[i],int(month),lons[ilon,ilat],lats[ilon,ilat]]
+                    array=[duration_column[i],mean_intensity_column[i],max_events_column[i],std_column[i],conv_filter_column[i],mean_div_column[i],mean_vor_column[i],temp_column[i],rh_column[i],convective_or_not_column[i],convective_fraction_column[i],int(month),lons[ilon,ilat],lats[ilon,ilat]]
                     data[idata,:]=array
                     idata=idata+1
                     if idata==len(data[:,0]):
@@ -313,7 +339,7 @@ np.save(data_folder+'events_data',data)
 #%%
 
 #headers=['duration','mean_intensity','max_intensity','std','convective_filter','convective_or_not','convective_fraction','month','lon','lat']
-headers=['duration','mean_intensity','max_intensity','std','convective_filter','div','vor','convective_or_not','convective_fraction','month','lon','lat']
+headers=['duration','mean_intensity','max_intensity','std','convective_filter','div','vor','temp','rh','convective_or_not','convective_fraction','month','lon','lat']
 
 data=np.load(data_folder+'events_data.npy')
 
@@ -354,34 +380,35 @@ training_data.mean(axis=0)
 #norm = normalize(random_subset[:,:4],axis=0)
 #norm = random_subset[:,:4]
 df = pd.DataFrame(data,columns=headers)
-X=training_data[:,:7]
-y=training_data[:,7].astype(int)
+X=training_data[:,:9]
+y=training_data[:,9].astype(int)
 #X=np.delete(np.delete(training_data[:,:],7,axis=1),7,axis=1)
 
 #normalizer = preprocessing.Normalizer(norm='l1').fit(X)
 #X=normalizer.transform(X)
 
 
-from sklearn.neural_network import MLPClassifier
-clf = MLPClassifier(solver='lbfgs', alpha=1e-1,
-                    hidden_layer_sizes=(10), random_state=1)
-clf.fit(X, y)
 
 
 from sklearn import neighbors
 clf = neighbors.KNeighborsClassifier(5)
 clf.fit(X, y)
 
+from sklearn.neural_network import MLPClassifier
+clf = MLPClassifier(solver='lbfgs', alpha=1e-1,
+                    hidden_layer_sizes=(10), random_state=1)
+clf.fit(X, y)
+
 from sklearn import svm
 clf = svm.SVC()
 clf.fit(X, y)
-X_evaluation=evaluation_data[:,:7]
+X_evaluation=evaluation_data[:,:9]
 #X_evaluation=np.delete(np.delete(evaluation_data[:,:],7,axis=1),7,axis=1)
 
 #X_evaluation=normalizer.transform(X_evaluation)
 
 
-y_evaluation=evaluation_data[:,7].astype(int)
+y_evaluation=evaluation_data[:,9].astype(int)
 
 score=clf.score(X_evaluation, y_evaluation)
 
@@ -399,6 +426,8 @@ predicted_mean_convective_fraction=np.ones_like(convective_fraction[0,])*np.nan
 for month in ['07']:
     print (month)
     duration=np.load(data_folder+'2006'+month+'duration_'+threshold+'.npy')
+    temp=np.load(data_folder+'2006'+month+'temp_'+threshold+'.npy')
+    rh=np.load(data_folder+'2006'+month+'rh_'+threshold+'.npy')
     mean_intensity=np.load(data_folder+'2006'+month+'mean_intensity_events_'+threshold+'.npy')
     mean_grsc_intensity=np.load(data_folder+'2006'+month+'mean_grsc_intensity_events_'+threshold+'.npy')
     mean_conv_intensity=np.load(data_folder+'2006'+month+'mean_conv_intensity_events_'+threshold+'.npy')
@@ -417,6 +446,8 @@ for month in ['07']:
         print (ilon)
         for ilat in range(lats.shape[1]):
             duration_column=duration[:,ilat,ilon]
+            temp_column=temp[:,ilat,ilon]
+            rh_column=rh[:,ilat,ilon]
             mean_div_column=mean_div[:,ilat,ilon]
             mean_vor_column=mean_vor[:,ilat,ilon]
             mean_intensity_column=mean_intensity[:,ilat,ilon]
@@ -428,6 +459,8 @@ for month in ['07']:
             
             events=[duration_column!=0]
             duration_column=duration_column[events]
+            rh_column=rh_column[events]
+            temp_column=temp_column[events]
             mean_intensity_column=mean_intensity_column[events]
             mean_div_column=mean_div_column[events]
             mean_vor_column=mean_vor_column[events]
@@ -440,12 +473,12 @@ for month in ['07']:
             if np.sum(events)>0:
                 for i in range(len(duration_column)):
                     
-                    array=[[duration_column[i],mean_intensity_column[i],max_events_column[i],std_column[i],conv_filter_column[i],mean_div_column[i],mean_vor_column[i]]]
+                    array=[[duration_column[i],mean_intensity_column[i],max_events_column[i],std_column[i],conv_filter_column[i],mean_div_column[i],mean_vor_column[i],temp_column[i],rh_column[i]]]
                     y_predicted=clf.predict(array)
                     predicted.append(y_predicted[0])
             
                 predicted_mean_convective_fraction[ilat,ilon]=np.mean(predicted)
-#%%
+                
 mean_convective_fraction=np.ones_like(convective_fraction[0,])*np.nan
 convective_fraction[convective_fraction>0.5]=1
 convective_fraction[convective_fraction<0.5]=0
@@ -460,9 +493,10 @@ plt.subplot(121)
 jle.Quick_plot(mean_convective_fraction,'July 12km Convective_fraction',metadata_dataset=jle.Load_sample_dataset_c(),levels=np.linspace(0,1,11),new_fig=0)
 plt.subplot(122)
 jle.Quick_plot(predicted_mean_convective_fraction,'July 12km ML predicted Convective_fraction score: '+str(score),metadata_dataset=jle.Load_sample_dataset_c(),levels=np.linspace(0,1,11),new_fig=0)
+#plt.savefig(plots_folder+'map_SVC.png')
+plt.savefig(plots_folder+'map_svc_with_temp_and_rh.png')
 plt.show()
 
-#plt.savefig(plots_folder+'lat_lon.png')
 
 
 

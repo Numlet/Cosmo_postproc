@@ -17,6 +17,7 @@ from matplotlib.colors import LogNorm
 from matplotlib import colors, ticker, cm
 from netCDF4 import Dataset
 import netCDF4
+import scipy
 import imp
 import os
 
@@ -36,7 +37,8 @@ scratch='/scratch/snx3000/jvergara/'
 sastre='/scratch/snx3000/jvergara/cajon_de_sastre/'
 home='/users/jvergara/'
 
-
+davids_f='/project/pr04/davidle/results_clim/lm_f/'
+davids_c='/project/pr04/davidle/results_clim/lm_c/'
 def Create_folder(path):
     if not os.path.isdir(path):
         os.mkdir(path)
@@ -320,7 +322,7 @@ def Quick_plot(dataset,variable,levels=0,title=0,cmap=plt.cm.viridis,show=0,savi
             try:
                 levels=np.linspace(dataset.variables[variable][0,].min(),dataset.variables[variable][0,].max(),10).tolist()
             except:
-                levels=np.linspace(dataset.variables[variable][:].min(),dataset.variables[variable][0,].max(),10).tolist()
+                levels=np.linspace(dataset.variables[variable][:].min(),dataset.variables[variable][:].max(),10).tolist()
         except:
             levels=np.linspace(dataset.min(),dataset.max(),10).tolist()
     if isinstance(dataset,netCDF4._netCDF4.Dataset):
@@ -362,6 +364,37 @@ def Quick_plot(dataset,variable,levels=0,title=0,cmap=plt.cm.viridis,show=0,savi
 #Quick_plot(dataset,variable)
 def Count_nans(array):
     print('Nans:',np.isnan(array).sum())
+    print('Fraction (0,1):',np.isnan(array).sum()/len(array))
+def PDF(data,nbins=100,output='area_one'):
+    min_val=data.min()
+    max_val=data.max()
+    if isinstance(nbins,np.ndarray):
+        bins=nbins
+        data=data.flatten()
+        data=data[data>bins[0]]
+        data=data[data<bins[-1]]
+    else:
+        bins=np.linspace(min_val,max_val,nbins)
+    size_bin=bins[1:]-bins[:-1]
+    bins_midpoint=(bins[1:]-bins[:-1])/2.+bins[1:]
+    number_ocurrencies=np.zeros_like(bins_midpoint)
+    for ibin in range(len(number_ocurrencies)):
+        larger=[data>bins[ibin]]
+        smaller=[data<bins[ibin+1]]
+        
+        number_ocurrencies[ibin]=np.sum(np.logical_and(larger,smaller))
+    
+    if output=='area_one':
+        normalized_pdf=number_ocurrencies/float(len(data))/size_bin
+        return normalized_pdf,bins_midpoint,size_bin
+    if output=='number_normalized':
+        normalized_pdf=number_ocurrencies/float(len(data))
+        return normalized_pdf,bins_midpoint,size_bin
+    if output=='ocurrences':
+        return number_ocurrencies,bins_midpoint,size_bin
+
+
+
 
 
 
@@ -383,6 +416,106 @@ def Mask_coarse_map(array,n=45):
     array_masked[:,-n:]=np.nan
     array_masked[:,:n]=np.nan
     return array_masked
+
+def Congrid(a, newdims, method='linear', centre=False, minusone=False):
+    '''
+    Function obtained form https://code.google.com/p/processgpr/source/browse/trunk/src/congrid.py
+    Arbitrary resampling of source array to new dimension sizes.
+    Currently only supports maintaining the same number of dimensions.
+    To use 1-D arrays, first promote them to shape (x,1).
+    Uses the same parameters and creates the same co-ordinate lookup points
+    as IDL''s congrid routine, which apparently originally came from a VAX/VMS
+    routine of the same name.
+    method:
+    neighbour - closest value from original data
+    nearest and linear - uses n x 1-D interpolations using
+                         scipy.interpolate.interp1d
+    (see Numerical Recipes for validity of use of n 1-D interpolations)
+    spline - uses ndimage.map_coordinates
+    centre:
+    True - interpolation points are at the centres of the bins
+    False - points are at the front edge of the bin
+    minusone:
+    For example- inarray.shape = (i,j) & new dimensions = (x,y)
+    False - inarray is resampled by factors of (i/x) * (j/y)
+    True - inarray is resampled by(i-1)/(x-1) * (j-1)/(y-1)
+    This prevents extrapolation one element beyond bounds of input array.
+    '''
+    if not a.dtype in [np.float64, np.float32]:
+        a = np.cast[float](a)
+
+    m1 = np.cast[int](minusone)
+    ofs = np.cast[int](centre) * 0.5
+    old = np.array( a.shape )
+    ndims = len( a.shape )
+    if len( newdims ) != ndims:
+        print ("[congrid] dimensions error. " \
+              "This routine currently only support " \
+              "rebinning to the same number of dimensions.")
+        return None
+    newdims = np.asarray( newdims, dtype=float )
+    dimlist = []
+
+    if method == 'neighbour':
+        for i in range( ndims ):
+            base = np.indices(newdims)[i]
+            dimlist.append( (old[i] - m1) / (newdims[i] - m1) \
+                            * (base + ofs) - ofs )
+        cd = np.array( dimlist ).round().astype(int)
+        newa = a[list( cd )]
+        return newa
+
+    elif method in ['nearest','linear']:
+        # calculate new dims
+        for i in range( ndims ):
+            base = np.arange( newdims[i] )
+            dimlist.append( (old[i] - m1) / (newdims[i] - m1) \
+                            * (base + ofs) - ofs )
+        # specify old dims
+        olddims = [np.arange(i, dtype = np.float) for i in list( a.shape )]
+
+        # first interpolation - for ndims = any
+        mint = scipy.interpolate.interp1d( olddims[-1], a, kind=method )
+        newa = mint( dimlist[-1] )
+
+        trorder = [ndims - 1] + range( ndims - 1 )
+        for i in range( ndims - 2, -1, -1 ):
+            newa = newa.transpose( trorder )
+
+            mint = scipy.interpolate.interp1d( olddims[i], newa, kind=method )
+            newa = mint( dimlist[i] )
+
+        if ndims > 1:
+            # need one more transpose to return to original dimensions
+            newa = newa.transpose( trorder )
+
+        return newa
+    elif method in ['spline']:
+        oslices = [ slice(0,j) for j in old ]
+        oldcoords = np.ogrid[oslices]
+        nslices = [ slice(0,j) for j in list(newdims) ]
+        newcoords = np.mgrid[nslices]
+
+        newcoords_dims = range(np.rank(newcoords))
+        #make first index last
+        newcoords_dims.append(newcoords_dims.pop(0))
+        newcoords_tr = newcoords.transpose(newcoords_dims)
+        # makes a view that affects newcoords
+
+        newcoords_tr += ofs
+
+        deltas = (np.asarray(old) - m1) / (newdims - m1)
+        newcoords_tr *= deltas
+
+        newcoords_tr -= ofs
+
+        newa = scipy.ndimage.map_coordinates(a, newcoords)
+        return newa
+    else:
+        print ("Congrid error: Unrecognized interpolation type.\n", \
+              "Currently only \'neighbour\', \'nearest\',\'linear\',", \
+              "and \'spline\' are supported.")
+        return None
 
 
 

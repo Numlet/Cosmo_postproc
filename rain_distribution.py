@@ -107,20 +107,53 @@ for month in jle.months_number_str:
 plt.savefig(plots_folder+'all_months.png')
 
 #%%
+month='01'
+
+rain_in_month=np.load(data_folder+'rain_in_month'+month+'.npy')
+conv_rain_in_month=np.load(data_folder+'conv_rain_in_month'+month+'.npy')
+grsc_rain_in_month=np.load(data_folder+'grsc_rain_in_month'+month+'.npy')
+
+
 print('fraction of rain below 0.1 threshold: %f'%(rain_in_month[rain_in_month<0.1].sum()/rain_in_month.sum()))
 rain_threshold=0.1
-
-bins=np.linspace(-2,4,100).tolist()
+plt.figure(figsize=(15,7))
+plt.subplot(121)
+plt.title(jle.month_names[int(month)-1])
+#bins=np.linspace(-2,5,100).tolist()
+bins=np.logspace(-1,2,100).tolist()
 rain=rain_in_month[rain_in_month>rain_threshold]
 rain_conv=conv_rain_in_month[rain_in_month>rain_threshold]
 rain_grsc=grsc_rain_in_month[rain_in_month>rain_threshold]
 rain_conv=rain_conv[rain_conv!=0]
 rain_grsc=rain_grsc[rain_grsc!=0]
-plt.hist(np.log(rain),bins=bins,alpha=0.3,label='all_rain')
-plt.hist(np.log(rain_conv),bins=bins,alpha=0.3,label='conv')
-plt.hist(np.log(rain_grsc),bins=bins,alpha=0.3,label='grsc')
+#plt.hist(np.log(rain),bins=bins,alpha=0.5,label='all_rain')
+#plt.hist(np.log(rain_conv),bins=bins,alpha=0.5,label='conv')
+#plt.hist(np.log(rain_grsc),bins=bins,alpha=0.5,label='grsc')
+plt.hist(rain,bins=bins,alpha=0.5,label='all_rain',cumulative=0)
+plt.hist(rain_conv,bins=bins,alpha=0.5,label='conv',cumulative=0)
+plt.hist(rain_grsc,bins=bins,alpha=0.5,label='grsc',cumulative=0)
+plt.xlabel(' (rain_intensity)')
+plt.xscale('log')
+plt.subplot(122)
+plt.title('cumulative')
+plt.hist(rain,bins=bins,alpha=0.5,label='all_rain',cumulative=1)
+plt.hist(rain_conv,bins=bins,alpha=0.5,label='conv',cumulative=1)
+plt.hist(rain_grsc,bins=bins,alpha=0.5,label='grsc',cumulative=1)
+plt.legend()
 #plt.axvline(np.log(0.1),c='r')
-plt.xlabel('log (rain_intensity)')
+#plt.yscale('log')
+plt.xlabel(' (rain_intensity)')
+plt.xscale('log')
+#plt.xlim
+plt.savefig(plots_folder+'distribution_of_rains_12km_cumulative_'+jle.month_names[int(month)-1]+'.png')
+#plt.savefig(plots_folder+'distribution_of_rains_12km.png')
+#%%
+plt.hist(rain,bins=bins,alpha=0.5,label='all_rain',cumulative=1)
+plt.hist(rain_conv,bins=bins,alpha=0.5,label='conv',cumulative=1)
+plt.hist(rain_grsc,bins=bins,alpha=0.5,label='grsc',cumulative=1)
+
+
+
 
 
 
